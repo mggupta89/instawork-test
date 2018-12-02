@@ -121,6 +121,7 @@ class TeamAction(APIResponseBase):
             self.errors.append('Invalid email')
 
     def validate_phone(self, phone):
+        #only checking null, should also use a regex for phone numbers
         if not phone:
             self.errors.append('Invalid phone')
 

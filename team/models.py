@@ -6,11 +6,12 @@ from django.conf import settings
 from exceptions import InstaworkException
 
 
+
 class Team(models.Model):
     first_name = models.TextField()
     last_name = models.TextField()
     email = models.EmailField(unique=True)
-    phone = models.IntegerField()
+    phone = models.TextField() #should add a validator
     role = models.TextField()
     created_on = models.DateTimeField(auto_now_add=True)
     modified_on = models.DateTimeField(auto_now=True)

@@ -26,10 +26,6 @@ class APIResponseBase(View):
         self.get_action(request, *args, **kwargs)
         return self.render_to_response()
 
-    def put(self, request, *args, **kwargs):
-        self.put_action(request, *args, **kwargs)
-        return self.render_to_response()
-
     def post(self, request, *args, **kwargs):
         self.post_action(request, *args, **kwargs)
         return self.render_to_response()
