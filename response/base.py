@@ -1,5 +1,6 @@
 from django.views.generic.base import View
 from django.http import HttpResponse
+import json
 
 class APIResponseBase(View):
     def __init__(self, **kwargs):
@@ -12,10 +13,17 @@ class APIResponseBase(View):
 
     def render_to_response(self, **response_kwargs):
         _context = {}
-        return HttpResponse('yayyyy')
+        _context.update({'data': self._data})
+        _context.update({
+            'status': self.status,
+            'status_code': self.status_code,
+            'message': self.message,
+            'errors': self.errors,
+        })
+        return HttpResponse(json.dumps(_context))
 
     def get(self, request, *args, **kwargs):
-        self.get_action()
+        self.get_action(request, *args, **kwargs)
         return self.render_to_response()
 
     def put(self, request, *args, **kwargs):
