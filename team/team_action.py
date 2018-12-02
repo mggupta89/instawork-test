@@ -1,8 +1,11 @@
+from django.http import QueryDict
+
 import utils
 from exceptions import InstaworkException
 from response.base import APIResponseBase
 from team.team_helper import TeamHelper
 from django.conf import settings
+import json
 
 
 class TeamAction(APIResponseBase):
@@ -34,7 +37,6 @@ class TeamAction(APIResponseBase):
         team_id = kwargs.get('id')
         if not team_id:
             self.set_bad_req("Invalid team")
-        from exceptions import InstaworkException
         try:
             self.team_helper.delete_team(team_id)
         except InstaworkException as e:
@@ -44,39 +46,39 @@ class TeamAction(APIResponseBase):
     def post_action(self, request, *args, **kwargs):
         ctxt = {}
         self._data = ctxt
+        team_id = kwargs.get('team_id')
         post_data = request.POST
         first_name = post_data.get('first_name')
         last_name = post_data.get('last_name')
         phone = post_data.get('phone')
         email = post_data.get('email')
         role = post_data.get('role')
-        self.validate_data(first_name, last_name, email, phone, role)
 
-        if self.errors:
-            self.set_bad_req('Invalid data')
+        if not team_id:
+            team = self.create_team(first_name, last_name, email, phone, role)
+            if team:
+                ctxt['team'] = team.to_json()
             return self._data
         else:
-            try:
-                team = self.team_helper.create_team(first_name, last_name, email, phone, role)
-            except InstaworkException as e:
-                self.set_error(str(e))
-                return self._data
-            ctxt['team'] = team.to_json()
+            team = self.update_team(first_name, last_name, email, phone, role)
+            if team:
+                ctxt['team'] = team.to_json()
             return self._data
 
-    def put_action(self, request, *args, **kwargs):
-        ctxt = {}
-        self._data = ctxt
-        team_id = kwargs.get('id')
-        if not team_id:
-            self.set_bad_req('Invalid team')
-        post_data = request.body
-        print(post_data)
-        first_name = post_data.get('first_name')
-        last_name = post_data.get('last_name')
-        phone = post_data.get('phone')
-        email = post_data.get('email')
-        role = post_data.get('role')
+
+    def create_team(self, first_name, last_name, email, phone, role):
+        self.validate_data(first_name, last_name, email, phone, role)
+        if self.errors:
+            self.set_bad_req('Invalid data')
+            return None
+        try:
+            return self.team_helper.create_team(first_name, last_name, email, phone, role)
+        except InstaworkException as e:
+            self.set_error(str(e))
+            return None
+
+    def update_team(self, team_id, first_name, last_name, email, phone, role):
+        # Validating data that is passed from front-end
         if first_name:
             self.validate_first_name(first_name)
         if last_name:
@@ -87,17 +89,16 @@ class TeamAction(APIResponseBase):
             self.validate_phone(phone)
         if role:
             self.validate_role(role)
+
         if self.errors:
             self.set_bad_req('Invalid data')
-            return self._data
-        print(email)
+            return None
+
         try:
-            team = self.team_helper.update_team(team_id, first_name, last_name, email, phone, role)
+            return self.team_helper.update_team(team_id, first_name, last_name, email, phone, role)
         except InstaworkException as e:
             self.set_error(str(e))
-            return self._data
-        ctxt['team'] = team.to_json()
-        return self._data
+            return None
 
 
     def validate_data(self, first_name, last_name, email, phone, role):
